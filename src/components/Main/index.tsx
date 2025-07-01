@@ -31,6 +31,30 @@ async function loadWindow() {
   }
 }
 
+let doorModel: { model: THREE.Group; size: THREE.Vector3 } | null = null
+
+async function loadDoor() {
+  if (doorModel !== null) {
+    return doorModel
+  } else {
+    const group = new THREE.Group()
+    const loader = new GLTFLoader()
+    const gltf = await loader.loadAsync('./door.glb')
+    group.add(gltf.scene)
+
+    const box = new THREE.Box3()
+    box.expandByObject(gltf.scene)
+
+    const size = box.getSize(new THREE.Vector3())
+    doorModel = {
+      model: group,
+      size
+    }
+
+    return doorModel
+  }
+}
+
 function Main() {
   const scene3DRef = useRef<THREE.Scene>(null)
   const scene2DRef = useRef<THREE.Scene>(null)
@@ -97,21 +121,38 @@ function Main() {
 
       item.windows.forEach(async (win) => {
         const path = new THREE.Path()
-        const { x, z } = win.leftBottomPosition
-        path.moveTo(x, z)
-        path.lineTo(x + win.width, z)
-        path.lineTo(x + win.width, z + win.height)
-        path.lineTo(x, z + win.height)
-        path.lineTo(x, z)
+        const { left, bottom } = win.leftBottomPosition
+        path.moveTo(left, bottom)
+        path.lineTo(left + win.width, bottom)
+        path.lineTo(left + win.width, bottom + win.height)
+        path.lineTo(left, bottom + win.height)
+        path.lineTo(left, bottom)
         shape.holes.push(path)
 
         const { model, size } = await loadWindow()
-        model.position.x = item.width / 2
-        model.position.y = item.height / 2
-        model.position.z = item.position.z
+        model.position.x = win.leftBottomPosition.left + win.width / 2;
+        model.position.y = win.leftBottomPosition.bottom + win.height / 2;
         model.scale.set(win.width / size.x, win.height / size.y, 1)
-        model.scale.setScalar(200)
-        scene.add(model)
+        wall.add(model)
+      })
+
+      item.doors?.forEach(async door => {
+        const path = new THREE.Path()
+        const { left, bottom } = door.leftBottomPosition
+        path.moveTo(left, bottom)
+        path.lineTo(left + door.width, bottom)
+        path.lineTo(left + door.width, bottom + door.height)
+        path.lineTo(left, bottom + door.height)
+        path.lineTo(left, bottom)
+        shape.holes.push(path)
+
+        const { model, size } = await loadDoor()
+        model.scale.y = door.height / size.y;
+        model.scale.z = door.width / size.z;
+        model.rotateY(Math.PI / 2);
+        model.position.x = door.leftBottomPosition.left + door.width / 2;
+        model.position.y = door.leftBottomPosition.bottom + door.height / 2;
+        wall.add(model)
       })
 
       const geometry = new THREE.ExtrudeGeometry(shape, {
@@ -121,8 +162,12 @@ function Main() {
         color: 'white'
       })
       const wall = new THREE.Mesh(geometry, material)
-      wall.position.set(item.position.x, item.position.y, item.position.z)
       // wall.rotateX(-Math.PI / 2)
+      wall.position.set(item.position.x, item.position.y, item.position.z)
+      if (item.rotationY) {
+        wall.rotation.y = item.rotationY
+      }
+
       return wall
     })
 
