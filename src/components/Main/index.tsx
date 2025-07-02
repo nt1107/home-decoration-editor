@@ -21,7 +21,6 @@ async function loadWindow() {
     box.expandByObject(gltf.scene)
 
     const size = box.getSize(new THREE.Vector3())
-    console.log('size', size)
     winModel = {
       model: group,
       size
@@ -54,6 +53,13 @@ async function loadDoor() {
     return doorModel
   }
 }
+
+const textureLoader = new THREE.TextureLoader()
+const floorTexture = textureLoader.load('./floor-texture.jpg')
+floorTexture.colorSpace = THREE.SRGBColorSpace
+floorTexture.wrapS = THREE.RepeatWrapping
+floorTexture.wrapT = THREE.RepeatWrapping
+floorTexture.repeat.set(0.002, 0.002)
 
 function Main() {
   const scene3DRef = useRef<THREE.Scene>(null)
@@ -110,6 +116,7 @@ function Main() {
   }, [data])
   // 3D绘制
   useEffect(() => {
+    const house = new THREE.Group()
     const scene = scene3DRef.current!
     const walls = data.walls.map((item) => {
       const shape = new THREE.Shape()
@@ -130,13 +137,13 @@ function Main() {
         shape.holes.push(path)
 
         const { model, size } = await loadWindow()
-        model.position.x = win.leftBottomPosition.left + win.width / 2;
-        model.position.y = win.leftBottomPosition.bottom + win.height / 2;
+        model.position.x = win.leftBottomPosition.left + win.width / 2
+        model.position.y = win.leftBottomPosition.bottom + win.height / 2
         model.scale.set(win.width / size.x, win.height / size.y, 1)
         wall.add(model)
       })
 
-      item.doors?.forEach(async door => {
+      item.doors?.forEach(async (door) => {
         const path = new THREE.Path()
         const { left, bottom } = door.leftBottomPosition
         path.moveTo(left, bottom)
@@ -147,11 +154,11 @@ function Main() {
         shape.holes.push(path)
 
         const { model, size } = await loadDoor()
-        model.scale.y = door.height / size.y;
-        model.scale.z = door.width / size.z;
-        model.rotateY(Math.PI / 2);
-        model.position.x = door.leftBottomPosition.left + door.width / 2;
-        model.position.y = door.leftBottomPosition.bottom + door.height / 2;
+        model.scale.y = door.height / size.y
+        model.scale.z = door.width / size.z
+        model.rotateY(Math.PI / 2)
+        model.position.x = door.leftBottomPosition.left + door.width / 2
+        model.position.y = door.leftBottomPosition.bottom + door.height / 2
         wall.add(model)
       })
 
@@ -171,8 +178,63 @@ function Main() {
       return wall
     })
 
-    scene.add(...walls)
+    house.add(...walls)
+
+    const floors = data.floors.map((item) => {
+      const shape = new THREE.Shape()
+      shape.moveTo(item.points[0].x, item.points[0].z)
+      for (let i = 1; i < item.points.length; i++) {
+        shape.lineTo(item.points[i].x, item.points[i].z)
+      }
+
+      let texture = floorTexture
+
+      if (item.textureUrl) {
+        texture = textureLoader.load(item.textureUrl)
+        texture.colorSpace = THREE.SRGBColorSpace
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.repeat.set(0.002, 0.002)
+      }
+
+      const geometry = new THREE.ShapeGeometry(shape)
+      const material = new THREE.MeshPhongMaterial({
+        map: texture,
+        side: THREE.BackSide
+      })
+      const floor = new THREE.Mesh(geometry, material)
+      floor.rotateX(Math.PI / 2)
+      return floor
+    })
+    house.add(...floors)
+
+    const ceilings = data.ceilings.map((item) => {
+      const shape = new THREE.Shape()
+      shape.moveTo(item.points[0].x, item.points[0].z)
+      for (let i = 1; i < item.points.length; i++) {
+        shape.lineTo(item.points[i].x, item.points[i].z)
+      }
+
+      const geometry = new THREE.ShapeGeometry(shape)
+      const material = new THREE.MeshPhongMaterial({
+        color: '#eee',
+        side: THREE.FrontSide
+      })
+      const ceiling = new THREE.Mesh(geometry, material)
+      ceiling.rotateX(Math.PI / 2)
+      ceiling.position.y = item.height
+      return ceiling
+    })
+    house.add(...ceilings)
+
+    scene.add(house)
+
+    const box3 = new THREE.Box3()
+    box3.expandByObject(house)
+    const center = box3.getCenter(new THREE.Vector3())
+    house.position.set(-center.x, -center.y, -center.z)
   }, [data])
+
   const [curMode, setCurMode] = useState('2d')
 
   return (

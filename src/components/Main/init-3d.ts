@@ -11,14 +11,14 @@ export function init3D(dom: HTMLElement) {
   directionalLight.position.set(0, 1500, 0)
   scene.add(directionalLight)
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 2)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
   scene.add(ambientLight)
 
   const width = window.innerWidth
   const height = window.innerHeight - 60
 
-  const camera = new THREE.PerspectiveCamera(60, width / height, 1, 10000)
-  camera.position.set(1500, 1500, 1000)
+  const camera = new THREE.PerspectiveCamera(60, width / height, 1, 100000)
+  camera.position.set(8000, 8000, 5000)
   camera.lookAt(0, 0, 0)
 
   const renderer = new THREE.WebGLRenderer({
