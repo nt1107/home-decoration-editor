@@ -3,11 +3,13 @@ import type { State } from '.'
 const data: State['data'] = {
   walls: [
     {
-      position: { x: 0, y: 0, z: 0 },
+      position: { x: 2800, y: 0, z: 200 },
       width: 2800,
       height: 3000,
       depth: 200,
       windows: [],
+      rotationY: Math.PI,
+      normal: { x: 0, y: 0, z: 1 },
       doors: [
         {
           leftBottomPosition: {
@@ -24,14 +26,17 @@ const data: State['data'] = {
       width: 5000,
       height: 3000,
       depth: 200,
+      normal: { x: 1, y: 0, z: 0 },
       rotationY: -Math.PI / 2,
       windows: []
     },
     {
-      position: { x: -5000, y: 0, z: 5000 },
+      position: { x: 0, y: 0, z: 5200 },
       width: 5000,
       height: 3000,
       depth: 200,
+      rotationY: Math.PI,
+      normal: { x: 0, y: 0, z: 1 },
       windows: []
     },
     {
@@ -39,6 +44,7 @@ const data: State['data'] = {
       width: 1880,
       height: 3000,
       depth: 200,
+      normal: { x: 1, y: 0, z: 0 },
       rotationY: -Math.PI / 2,
       windows: []
     },
@@ -47,6 +53,7 @@ const data: State['data'] = {
       width: 3000,
       height: 3000,
       depth: 200,
+      normal: { x: 0, y: 0, z: -1 },
       windows: [
         {
           leftBottomPosition: {
@@ -64,6 +71,7 @@ const data: State['data'] = {
       height: 3000,
       depth: 200,
       rotationY: -Math.PI / 2,
+      normal: { x: 1, y: 0, z: 0 },
       windows: []
     },
     {
@@ -71,6 +79,7 @@ const data: State['data'] = {
       width: 2880,
       height: 3000,
       depth: 200,
+      normal: { x: 0, y: 0, z: -1 },
       windows: [
         {
           leftBottomPosition: {
@@ -83,11 +92,12 @@ const data: State['data'] = {
       ]
     },
     {
-      position: { x: 880, y: 0, z: 7080 },
+      position: { x: 680, y: 0, z: 8480 },
       width: 1380,
       height: 3000,
       depth: 200,
-      rotationY: -Math.PI / 2,
+      rotationY: Math.PI / 2,
+      normal: { x: -1, y: 0, z: 0 },
       windows: []
     },
     {
@@ -95,14 +105,16 @@ const data: State['data'] = {
       width: 2000,
       height: 3000,
       depth: 200,
+      normal: { x: 0, y: 0, z: -1 },
       windows: []
     },
     {
-      position: { x: 2880, y: 0, z: 0 },
-      width: 7180,
+      position: { x: 2680, y: 0, z: 7080 },
+      width: 7100,
       height: 3000,
       depth: 200,
-      rotationY: -Math.PI / 2,
+      rotationY: Math.PI / 2,
+      normal: { x: -1, y: 0, z: 0 },
       windows: [
         {
           leftBottomPosition: {
@@ -126,28 +138,32 @@ const data: State['data'] = {
   floors: [
     {
       points: [
-        { x: -2000, z: 5200 },
-        { x: -5000, z: 5200 },
-        { x: -5000, z: 7000 },
-        { x: -2000, z: 7000 },
-        { x: -2000, z: 5200 }
-      ]
+        { x: -2000, z: 5000 },
+        { x: -5000, z: 5000 },
+        { x: -5000, z: 6680 },
+        { x: -2000, z: 6680 },
+        { x: -2000, z: 5000 }
+      ],
+      name: '书房',
+      size: 5.64
     },
     {
       points: [
         { x: 0, z: 0 },
-        { x: 2880, z: 0 },
-        { x: 2880, z: 7180 },
-        { x: 880, z: 7180 },
-        { x: 880, z: 8380 },
-        { x: -2000, z: 8380 },
-        { x: -2000, z: 6880 },
+        { x: 2680, z: 0 },
+        { x: 2680, z: 6900 },
+        { x: 680, z: 6900 },
+        { x: 680, z: 8050 },
+        { x: -2000, z: 8050 },
+        { x: -2000, z: 6680 },
         { x: -2000, z: 5000 },
         { x: -2000, z: 5000 },
         { x: 0, z: 5000 },
         { x: 0, z: 0 }
       ],
-      textureUrl: './floor-texture2.jpg'
+      textureUrl: './floor-texture2.png',
+      name: '客餐厅',
+      size: 28.89
     }
   ],
   ceilings: [

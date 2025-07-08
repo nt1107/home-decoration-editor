@@ -4,22 +4,22 @@ import { MapControls } from 'three/examples/jsm/Addons.js'
 export function init2D(dom: HTMLElement) {
   const scene = new THREE.Scene()
 
-  const axesHelper = new THREE.AxesHelper(500)
+  const axesHelper = new THREE.AxesHelper(50000)
   scene.add(axesHelper)
 
   const directionalLight = new THREE.DirectionalLight(0xffffff)
   directionalLight.position.set(500, 400, 300)
   scene.add(directionalLight)
 
-  const ambientLight = new THREE.AmbientLight(0xffffff)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
   scene.add(ambientLight)
 
   const width = window.innerWidth
   const height = window.innerHeight - 60
 
-  const camera = new THREE.PerspectiveCamera(60, width / height, 1, 10000)
-  camera.position.set(200, 500, -100)
-  camera.lookAt(200, 0, -100)
+  const camera = new THREE.PerspectiveCamera(60, width / height, 1, 100000)
+  camera.position.set(0, 10000, 0)
+  camera.lookAt(0, 0, 0)
 
   const renderer = new THREE.WebGLRenderer({
     antialias: true
@@ -41,7 +41,6 @@ export function init2D(dom: HTMLElement) {
 
   const controls = new MapControls(camera, renderer.domElement)
   controls.enableRotate = false
-  controls.target.set(200, 0, -100)
 
   function render() {
     controls.update()

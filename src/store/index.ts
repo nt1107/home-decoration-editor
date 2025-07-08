@@ -7,6 +7,7 @@ interface Wall {
   height: number
   depth: number
   rotationY?: number
+  normal: { x: number; y: number; z: number }
   windows: Array<{
     leftBottomPosition: {
       left: number
@@ -30,6 +31,8 @@ interface Floor {
     z: number
   }>
   textureUrl?: string
+  name?: string
+  size?: number
 }
 interface Ceiling {
   points: Array<{
@@ -47,9 +50,21 @@ export interface State {
   }
 }
 
-const useHouseStore = create<State>(() => {
+export interface Action {
+  setData(data: State['data']): void
+}
+
+const useHouseStore = create<State>((set) => {
   return {
-    data
+    data,
+    setData(data: State['data']) {
+      set((state) => {
+        return {
+          ...state,
+          data: data
+        }
+      })
+    }
   }
 })
 

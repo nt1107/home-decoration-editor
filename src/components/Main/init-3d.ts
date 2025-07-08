@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
-export function init3D(dom: HTMLElement) {
+export function init3D(dom: HTMLElement, wallsVisibilityCalc: Function) {
   const scene = new THREE.Scene()
 
   const axesHelper = new THREE.AxesHelper(5000)
@@ -21,15 +21,19 @@ export function init3D(dom: HTMLElement) {
   camera.position.set(8000, 8000, 5000)
   camera.lookAt(0, 0, 0)
 
+  const gridHelper = new THREE.GridHelper(100000, 500, 'white', 'white')
+  scene.add(gridHelper)
+
   const renderer = new THREE.WebGLRenderer({
     antialias: true
   })
   renderer.setSize(width, height)
-  renderer.setClearColor('lightyellow')
+  renderer.setClearColor('skyblue')
 
   function render() {
     renderer.render(scene, camera)
     requestAnimationFrame(render)
+    // wallsVisibilityCalc()
   }
 
   render()
@@ -48,7 +52,31 @@ export function init3D(dom: HTMLElement) {
 
   new OrbitControls(camera, renderer.domElement)
 
+  const edges: Array<THREE.Line> = []
+  renderer.domElement.addEventListener('click', (e) => {
+    const y = -((e.offsetY / height) * 2 - 1)
+    const x = (e.offsetX / width) * 2 - 1
+
+    const raycaster = new THREE.Raycaster()
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera)
+    const intersects = raycaster.intersectObjects(scene.children)
+    edges.forEach((item) => {
+      item.parent?.remove(item)
+    })
+    if (intersects.length) {
+      const obj = intersects[0].object as THREE.Mesh
+      if (obj.isMesh) {
+        const geometry = new THREE.EdgesGeometry(obj.geometry)
+        const material = new THREE.LineBasicMaterial({ color: 'blue' })
+        const line = new THREE.LineSegments(geometry, material)
+        obj.add(line)
+        edges.push(line)
+      }
+    }
+  })
+
   return {
-    scene
+    scene,
+    camera
   }
 }

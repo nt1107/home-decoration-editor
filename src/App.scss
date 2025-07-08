@@ -28,7 +28,7 @@ body {
           position: absolute;
           z-index: 3;
           bottom: 20px;
-          left: 20px;
+          left: 320px;
         }
       }
 
@@ -55,7 +55,7 @@ body {
         top: 0;
         width: 300px;
         height: calc(100vh - 60px);
-        background: pink;
+        background: white;
         transition: left 0.5s ease-in-out, right 0.5s ease-in-out;
       }
       .Menu {
