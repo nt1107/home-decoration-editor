@@ -58,6 +58,7 @@ export function init3D(
 
   const controls = new OrbitControls(camera, renderer.domElement)
   const transformControls = new TransformControls(camera, renderer.domElement)
+  transformControls.showY = false
   const transformHelper = transformControls.getHelper()
   scene.add(transformHelper)
 
@@ -123,10 +124,12 @@ export function init3D(
       transformControls.mode = 'translate'
       transformControls.showX = true
       transformControls.showZ = true
+      transformControls.showY = false
     } else {
       transformControls.mode = 'rotate'
       transformControls.showX = false
       transformControls.showZ = false
+      transformControls.showY = false
     }
   }
 

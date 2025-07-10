@@ -1,7 +1,11 @@
 import * as THREE from 'three'
-import { MapControls } from 'three/examples/jsm/Addons.js'
+import { MapControls, TransformControls } from 'three/examples/jsm/Addons.js'
+import type { Action } from '../../store'
 
-export function init2D(dom: HTMLElement) {
+export function init2D(
+  dom: HTMLElement,
+  updateFurniture: Action['updateFurniture']
+) {
   const scene = new THREE.Scene()
 
   const axesHelper = new THREE.AxesHelper(50000)
@@ -42,6 +46,72 @@ export function init2D(dom: HTMLElement) {
   const controls = new MapControls(camera, renderer.domElement)
   controls.enableRotate = false
 
+  const transformControls = new TransformControls(camera, renderer.domElement)
+  transformControls.showY = false
+
+  const transformHelper = transformControls.getHelper()
+  scene.add(transformHelper)
+
+  transformControls.addEventListener('dragging-changed', function (event) {
+    controls.enabled = !event.value
+  })
+
+  transformControls.addEventListener('change', () => {
+    const obj = transformControls.object
+
+    if (obj) {
+      if (transformControls.mode === 'translate') {
+        updateFurniture(
+          obj.name,
+          'position',
+          new THREE.Vector3(-obj.position.x, -obj.position.y, -obj.position.z)
+        )
+      } else if (transformControls.mode === 'rotate') {
+        updateFurniture(
+          obj.name,
+          'rotation',
+          new THREE.Vector3(obj.rotation.x, obj.rotation.y, obj.rotation.z)
+        )
+      }
+    }
+  })
+
+  renderer.domElement.addEventListener('click', (e) => {
+    const y = -((e.offsetY / height) * 2 - 1)
+    const x = (e.offsetX / width) * 2 - 1
+
+    const rayCaster = new THREE.Raycaster()
+    rayCaster.setFromCamera(new THREE.Vector2(x, y), camera)
+
+    const furnitures = scene.getObjectByName('furnitures')!
+    const intersections2 = rayCaster.intersectObjects(furnitures.children)
+
+    if (intersections2.length) {
+      const obj = intersections2[0].object as THREE.Object3D & {
+        target?: THREE.Object3D
+      }
+      if (obj.target) {
+        transformControls.attach(obj.target)
+      }
+    } else {
+      transformControls.detach()
+    }
+  })
+
+  function changeMode(isTranslate: boolean) {
+    if (isTranslate) {
+      transformControls.mode = 'translate'
+      transformControls.showX = true
+      transformControls.showZ = true
+      transformControls.showY = false
+    } else {
+      transformControls.mode = 'rotate'
+      transformControls.showX = false
+      transformControls.showZ = false
+      transformControls.showY = true
+    }
+  }
+
   function render() {
     controls.update()
     renderer.render(scene, camera)
@@ -51,6 +121,7 @@ export function init2D(dom: HTMLElement) {
   render()
 
   return {
-    scene
+    scene,
+    changeMode
   }
 }
