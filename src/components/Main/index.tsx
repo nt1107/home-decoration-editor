@@ -76,19 +76,22 @@ function Main() {
   const scene3DRef = useRef<THREE.Scene>(null)
   const scene2DRef = useRef<THREE.Scene>(null)
   const camera3DRef = useRef<THREE.Camera>(null)
+  const changeModeRef = useRef<(isTranslate: boolean) => void>(null)
 
-  const { data } = useHouseStore()
+  const { data, updateFurniture } = useHouseStore()
   useEffect(() => {
     const scene1 = scene2DRef.current
     const scene2 = scene3DRef.current
     const house1 = scene1?.getObjectByName('house')
     const house2 = scene2?.getObjectByName('house')
 
+    if (data.walls.length) return
+
     house1?.parent?.remove(house1)
     house2?.parent?.remove(house2)
 
     house1?.traverse((item) => {
-      let obj = item as THREE.Mesh
+      const obj = item as THREE.Mesh
       if (obj.isMesh) {
         obj.geometry.dispose()
       }
@@ -112,9 +115,14 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-3d-container')
     if (dom) {
-      const { scene, camera } = init3D(dom, wallsVisibilityCalc)
+      const { scene, camera, changeMode } = init3D(
+        dom,
+        wallsVisibilityCalc,
+        updateFurniture
+      )
       scene3DRef.current = scene
       camera3DRef.current = camera
+      changeModeRef.current = changeMode
     }
 
     return () => {
@@ -296,6 +304,25 @@ function Main() {
   useEffect(() => {
     const house = new THREE.Group()
     const scene = scene3DRef.current!
+
+    const houseObj = scene.getObjectByName('house')!
+    if (houseObj) {
+      data.furnitures.forEach((furniture) => {
+        const obj = houseObj.getObjectByName(furniture.id)
+        if (obj) {
+          obj.position.set(
+            furniture.position.x,
+            furniture.position.y,
+            furniture.position.z
+          )
+          obj.rotation.x = furniture.rotation.x
+          obj.rotation.y = furniture.rotation.y
+          obj.rotation.z = furniture.rotation.z
+        }
+      })
+      return
+    }
+
     const walls = data.walls.map((item, index) => {
       const shape = new THREE.Shape()
       shape.moveTo(0, 0)
@@ -415,6 +442,30 @@ function Main() {
     const center = box3.getCenter(new THREE.Vector3())
     house.position.set(-center.x, 0, -center.z)
     house.name = 'house'
+
+    const furnitures = new THREE.Group()
+    furnitures.name = 'furnitures'
+    data.furnitures.forEach((furniture) => {
+      const gltfLoader = new GLTFLoader()
+      gltfLoader.load(furniture.modelUrl, (gltf) => {
+        furnitures.add(gltf.scene)
+        gltf.scene.position.set(
+          furniture.position.x,
+          furniture.position.y,
+          furniture.position.z
+        )
+        gltf.scene.rotation.x = furniture.rotation.x
+        gltf.scene.rotation.y = furniture.rotation.y
+        gltf.scene.rotation.z = furniture.rotation.z
+
+        gltf.scene.traverse((obj) => {
+          ;(obj as THREE.Object3D & { target?: THREE.Object3D }).target =
+            gltf.scene
+        })
+        gltf.scene.name = furniture.id
+      })
+    })
+    house.add(furnitures)
   }, [data])
 
   const [curMode, setCurMode] = useState('2d')
@@ -443,6 +494,8 @@ function Main() {
         >
           3D
         </Button>
+        <Button onClick={() => changeModeRef.current?.(true)}>平移</Button>
+        <Button onClick={() => changeModeRef.current?.(false)}>旋转</Button>
       </div>
     </div>
   )
