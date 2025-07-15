@@ -47,6 +47,10 @@ export function init3D(
   dom.append(renderer.domElement)
 
   window.onresize = function () {
+    const size = renderer.getSize(new THREE.Vector2())
+    if (size.y === 200) {
+      return
+    }
     const width = window.innerWidth
     const height = window.innerHeight - 60
 
@@ -84,6 +88,8 @@ export function init3D(
 
   const edges: Array<THREE.Line> = []
   renderer.domElement.addEventListener('click', (e) => {
+    const { x: width, y: height } = renderer.getSize(new THREE.Vector2())
+
     const y = -((e.offsetY / height) * 2 - 1)
     const x = (e.offsetX / width) * 2 - 1
 
@@ -133,9 +139,27 @@ export function init3D(
     }
   }
 
+  function changeSize(isBig: boolean) {
+    if (isBig) {
+      const width = window.innerWidth
+      const height = window.innerHeight - 60
+      renderer.setSize(width, height)
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+    } else {
+      const width = 240
+      const height = 200
+
+      renderer.setSize(width, height)
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+    }
+  }
+
   return {
     scene,
     camera,
-    changeMode
+    changeMode,
+    changeSize
   }
 }

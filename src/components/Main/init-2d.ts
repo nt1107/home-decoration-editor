@@ -34,6 +34,10 @@ export function init2D(
   dom.append(renderer.domElement)
 
   window.onresize = function () {
+    const size = renderer.getSize(new THREE.Vector2())
+    if (size.y === 200) {
+      return
+    }
     const width = window.innerWidth
     const height = window.innerHeight - 60
 
@@ -77,6 +81,8 @@ export function init2D(
   })
 
   renderer.domElement.addEventListener('click', (e) => {
+    const { x: width, y: height } = renderer.getSize(new THREE.Vector2())
+
     const y = -((e.offsetY / height) * 2 - 1)
     const x = (e.offsetX / width) * 2 - 1
 
@@ -112,6 +118,26 @@ export function init2D(
     }
   }
 
+  function changeSize(isBig: boolean) {
+    if (isBig) {
+      const width = window.innerWidth
+      const height = window.innerHeight - 60
+
+      renderer.setSize(width, height)
+
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+    } else {
+      const width = 240
+      const height = 200
+
+      renderer.setSize(width, height)
+
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+    }
+  }
+
   function render() {
     controls.update()
     renderer.render(scene, camera)
@@ -122,6 +148,7 @@ export function init2D(
 
   return {
     scene,
-    changeMode
+    changeMode,
+    changeSize
   }
 }

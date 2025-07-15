@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { useHouseStore } from '../../store'
+import { useHouseStore, type State } from '../../store'
 import { init3D } from './init-3d'
 import { init2D } from './init-2d'
 import { Button } from 'antd'
@@ -49,12 +49,16 @@ floorTexture.wrapT = THREE.RepeatWrapping
 floorTexture.repeat.set(0.002, 0.002)
 
 function Main() {
+  const { data, updateFurniture } = useHouseStore()
+  const dataRef = useRef<State['data']>(null)
+  dataRef.current = data
+
   function wallsVisibilityCalc() {
     const camera = camera3DRef.current
     const scene = scene3DRef.current
     if (!camera) return
 
-    data.walls.forEach((item, index) => {
+    dataRef.current!.walls.forEach((item, index) => {
       const cameraDirection = new THREE.Vector3()
       camera.getWorldDirection(cameraDirection)
 
@@ -78,8 +82,10 @@ function Main() {
   const camera3DRef = useRef<THREE.Camera>(null)
   const changeModeRef = useRef<(isTranslate: boolean) => void>(null)
   const changeMode2DRef = useRef<(isTranslate: boolean) => void>(null)
+  const changeSize3DRef = useRef<(isBig: boolean) => void>(null)
+  const changeSize2DRef = useRef<(isBig: boolean) => void>(null)
+  const [curMode, setCurMode] = useState('2d')
 
-  const { data, updateFurniture } = useHouseStore()
   useEffect(() => {
     const scene1 = scene2DRef.current
     const scene2 = scene3DRef.current
@@ -103,9 +109,10 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-2d-container')
     if (dom) {
-      const { scene, changeMode } = init2D(dom, updateFurniture)
+      const { scene, changeMode, changeSize } = init2D(dom, updateFurniture)
       scene2DRef.current = scene
       changeMode2DRef.current = changeMode
+      changeSize2DRef.current = changeSize
     }
     return () => {
       if (dom) {
@@ -117,7 +124,7 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-3d-container')
     if (dom) {
-      const { scene, camera, changeMode } = init3D(
+      const { scene, camera, changeMode, changeSize } = init3D(
         dom,
         wallsVisibilityCalc,
         updateFurniture
@@ -125,18 +132,35 @@ function Main() {
       scene3DRef.current = scene
       camera3DRef.current = camera
       changeModeRef.current = changeMode
+      changeSize3DRef.current = changeSize
     }
-
     return () => {
       if (dom) {
         dom.innerHTML = ''
       }
     }
   }, [])
+
+  useEffect(() => {
+    const changeSize3D = changeSize3DRef.current!
+    const changeSize2D = changeSize2DRef.current!
+
+    if (curMode === '2d') {
+      changeSize3D(false)
+      changeSize2D(true)
+    } else {
+      changeSize3D(true)
+      changeSize2D(false)
+    }
+  }, [curMode])
+
   // 2D绘制
   useEffect(() => {
     const scene = scene2DRef.current!
     const house = new THREE.Group()
+    if (!data.walls.length) {
+      return
+    }
 
     const houseObj = scene.getObjectByName('house')!
     if (houseObj) {
@@ -355,6 +379,9 @@ function Main() {
   useEffect(() => {
     const house = new THREE.Group()
     const scene = scene3DRef.current!
+    if (!data.walls.length) {
+      return
+    }
 
     const houseObj = scene.getObjectByName('house')!
     if (houseObj) {
@@ -519,17 +546,15 @@ function Main() {
     house.add(furnitures)
   }, [data])
 
-  const [curMode, setCurMode] = useState('2d')
-
   return (
     <div className="Main">
       <div
         id="threejs-3d-container"
-        style={{ display: curMode === '3d' ? 'block' : 'none' }}
+        style={{ zIndex: curMode === '2d' ? 2 : 1 }}
       ></div>
       <div
         id="threejs-2d-container"
-        style={{ display: curMode === '2d' ? 'block' : 'none' }}
+        style={{ zIndex: curMode === '3d' ? 2 : 1 }}
       ></div>
 
       <div className="mode-change-btns">

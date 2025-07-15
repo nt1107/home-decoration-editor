@@ -44,7 +44,17 @@ function Menu() {
           <Popconfirm
             title="提醒"
             description="切换户型将清空数据，是否继续？"
-            onConfirm={() => setData(data1)}
+            onConfirm={() => {
+              setData({
+                walls: [],
+                floors: [],
+                ceilings: [],
+                furnitures: []
+              })
+              setTimeout(() => {
+                setData(data1)
+              }, 0)
+            }}
             okText="是"
             cancelText="否"
           >
@@ -60,7 +70,18 @@ function Menu() {
           <Popconfirm
             title="提醒"
             description="切换户型将清空数据，是否继续？"
-            onConfirm={() => setData(data2)}
+            onConfirm={() => {
+              setData({
+                walls: [],
+                floors: [],
+                ceilings: [],
+                furnitures: []
+              })
+
+              setTimeout(() => {
+                setData(data2)
+              }, 0)
+            }}
             okText="是"
             cancelText="否"
           >

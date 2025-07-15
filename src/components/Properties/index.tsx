@@ -12,7 +12,7 @@ function Properties() {
       <div
         className="drawer-bar"
         onClick={() => {
-          setRight(right === 0 ? -300 : 0)
+          setRight(right === 0 ? -240 : 0)
         }}
       ></div>
     </div>

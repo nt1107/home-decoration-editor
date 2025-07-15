@@ -18,12 +18,15 @@ body {
 
         #threejs-3d-container {
           position: absolute;
-          z-index: 1;
+          z-index: 2;
+          right: 0;
         }
         #threejs-2d-container {
           position: absolute;
-          z-index: 2;
+          z-index: 1;
+          right: 0;
         }
+
         .mode-change-btns {
           position: absolute;
           z-index: 3;
@@ -63,9 +66,10 @@ body {
         border-right: 1px solid #000;
       }
       .Properties {
-        right: 0;
-        background: orange;
-        border-left: 1px solid #000;
+        height: calc(100vh - 60px - 200px);
+        top: auto;
+        width: 240px;
+        bottom: 0;
       }
     }
   }
