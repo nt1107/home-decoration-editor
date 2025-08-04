@@ -72,15 +72,14 @@ export function init3D(
 
   transformControls.addEventListener('change', () => {
     const obj = transformControls.object
-
-    if (obj) {
+     if (obj) {
       if (transformControls.mode === 'translate') {
         updateFurniture(obj.name, 'position', obj.position)
       } else if (transformControls.mode === 'rotate') {
-        updateFurniture(
+          updateFurniture(
           obj.name,
           'rotation',
-          new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z)
+          new THREE.Vector3(obj.rotation.x, obj.rotation.y, obj.rotation.z)
         )
       }
     }
@@ -135,7 +134,7 @@ export function init3D(
       transformControls.mode = 'rotate'
       transformControls.showX = false
       transformControls.showZ = false
-      transformControls.showY = false
+      transformControls.showY = true
     }
   }
 

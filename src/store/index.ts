@@ -45,6 +45,7 @@ interface Ceiling {
 }
 interface Furniture {
   modelUrl: string
+  modelScale?: number;
   id: string
   position: {
     x: number
@@ -64,6 +65,7 @@ export interface State {
     floors: Array<Floor>
     ceilings: Array<Ceiling>
     furnitures: Array<Furniture>
+    
   }
 }
 
@@ -74,6 +76,7 @@ export interface Action {
     type: 'position' | 'rotation',
     info: Vector3
   ): void
+  addFurniture(furniture: Furniture): void;
 }
 
 const stateCreator: StateCreator<State & Action> = (set) => {
@@ -109,6 +112,20 @@ const stateCreator: StateCreator<State & Action> = (set) => {
             })
           }
         }
+      })
+    },
+    addFurniture(furniture: Furniture) {
+      set(state => {
+          return {
+              ...state,
+              data: {
+                  ...state.data,
+                  furnitures: [
+                      ...state.data.furnitures,
+                      furniture
+                  ]
+              }
+          }
       })
     }
   }
