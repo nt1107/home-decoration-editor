@@ -11,7 +11,7 @@ export function init3D(
   const scene = new THREE.Scene()
 
   const axesHelper = new THREE.AxesHelper(5000)
-  scene.add(axesHelper)
+  // scene.add(axesHelper)
 
   const directionalLight = new THREE.DirectionalLight(0xffffff)
   directionalLight.position.set(0, 1500, 0)
@@ -159,6 +159,7 @@ export function init3D(
     scene,
     camera,
     changeMode,
-    changeSize
+    changeSize,
+    controls
   }
 }

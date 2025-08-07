@@ -4,14 +4,29 @@ import { useHouseStore, type State } from '../../store'
 import { init3D } from './init-3d'
 import { init2D } from './init-2d'
 import { Button } from 'antd'
-import { GLTFLoader } from 'three/examples/jsm/Addons.js'
+import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js'
 import SpriteText from 'three-spritetext'
 import { useDrop } from 'react-dnd'
+import { modelMap } from '../../App'
+
+
+let loaderCache: GLTFLoader;
+export function getGLTFLoader() {
+    if(!loaderCache) {
+        const gltfLoader = new GLTFLoader();
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.6/' );
+        gltfLoader.setDRACOLoader(dracoLoader);
+        loaderCache = gltfLoader;
+    }
+    return loaderCache;
+}
+
 
 async function loadWindow() {
   const group = new THREE.Group()
-  const loader = new GLTFLoader()
-  const gltf = await loader.loadAsync('./window.glb')
+  const gltf = await modelMap['./window.glb']
+  gltf.scene = gltf.scene.clone()
   group.add(gltf.scene)
 
   const box = new THREE.Box3()
@@ -27,10 +42,9 @@ async function loadWindow() {
 
 async function loadDoor() {
   const group = new THREE.Group()
-  const loader = new GLTFLoader()
-  const gltf = await loader.loadAsync('./door.glb')
+  const gltf = await modelMap['./door.glb']
+  gltf.scene = gltf.scene.clone()
   group.add(gltf.scene)
-
   const box = new THREE.Box3()
   box.expandByObject(gltf.scene)
 
@@ -85,6 +99,8 @@ function Main() {
   const changeMode2DRef = useRef<(isTranslate: boolean) => void>(null)
   const changeSize3DRef = useRef<(isBig: boolean) => void>(null)
   const changeSize2DRef = useRef<(isBig: boolean) => void>(null)
+  const controls3DRef = useRef<OrbitControls>(null);
+
   const [curMode, setCurMode] = useState('2d')
 
   useEffect(() => {
@@ -125,7 +141,7 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-3d-container')
     if (dom) {
-      const { scene, camera, changeMode, changeSize } = init3D(
+      const { scene, camera, changeMode, changeSize, controls } = init3D(
         dom,
         wallsVisibilityCalc,
         updateFurniture
@@ -134,6 +150,7 @@ function Main() {
       camera3DRef.current = camera
       changeModeRef.current = changeMode
       changeSize3DRef.current = changeSize
+      controls3DRef.current = controls
     }
     return () => {
       if (dom) {
@@ -178,6 +195,30 @@ function Main() {
           obj.rotation.x = furniture.rotation.x
           obj.rotation.y = furniture.rotation.y
           obj.rotation.z = furniture.rotation.z
+        } else {
+          const furnitures = houseObj.getObjectByName('furnitures')!;
+      
+          modelMap[furniture.modelUrl].then((gltf) => {
+            gltf.scene = gltf.scene.clone()
+            furnitures.add(gltf.scene);
+    
+            gltf.scene.scale.setScalar(furniture.modelScale || 1);
+    
+            gltf.scene.position.set(
+                -furniture.position.x,
+                -furniture.position.y,
+                -furniture.position.z
+            );
+    
+            gltf.scene.rotation.x = furniture.rotation.x;
+            gltf.scene.rotation.y = furniture.rotation.y;
+            gltf.scene.rotation.z = furniture.rotation.z;
+    
+            gltf.scene.traverse(obj => {
+                (obj as any).target = gltf.scene;
+            });
+            gltf.scene.name = furniture.id
+          })
         }
       })
       return
@@ -350,8 +391,9 @@ function Main() {
     const furnitures = new THREE.Group()
     furnitures.name = 'furnitures'
     data.furnitures.forEach((furniture) => {
-      const gltfLoader = new GLTFLoader()
-      gltfLoader.load(furniture.modelUrl, (gltf) => {
+       
+      modelMap[furniture.modelUrl].then((gltf) => {
+        gltf.scene = gltf.scene.clone()
         furnitures.add(gltf.scene)
         gltf.scene.scale.setScalar(furniture.modelScale || 1)
         gltf.scene.position.set(
@@ -373,7 +415,7 @@ function Main() {
     house.add(furnitures)
 
     const helper = new THREE.AxesHelper(30000)
-    house.add(helper)
+    // house.add(helper)
   }, [data])
 
   // 3D绘制
@@ -398,12 +440,12 @@ function Main() {
           obj.rotation.y = furniture.rotation.y
           obj.rotation.z = furniture.rotation.z
         } else {
-          const gltfLoader = new GLTFLoader();
+         
           const furnitures = houseObj.getObjectByName('furnitures')!;
       
-          gltfLoader.load(furniture.modelUrl, (gltf) => {
+          modelMap[furniture.modelUrl].then((gltf) => {
+            gltf.scene = gltf.scene.clone()
               furnitures.add(gltf.scene);
-      
               gltf.scene.scale.setScalar(furniture.modelScale || 1);
       
               gltf.scene.position.set(
@@ -548,14 +590,16 @@ function Main() {
     const box3 = new THREE.Box3()
     box3.expandByObject(house)
     const center = box3.getCenter(new THREE.Vector3())
-    // house.position.set(-center.x, 0, -center.z)
+    camera3DRef.current?.lookAt(center.x, 0, center.z);
+    controls3DRef.current?.target.set(center.x, 0, center.z);
     house.name = 'house'
 
     const furnitures = new THREE.Group()
     furnitures.name = 'furnitures'
     data.furnitures.forEach((furniture) => {
-      const gltfLoader = new GLTFLoader()
-      gltfLoader.load(furniture.modelUrl, (gltf) => {
+      
+      modelMap[furniture.modelUrl].then((gltf) => {
+        gltf.scene = gltf.scene.clone()
         furnitures.add(gltf.scene)
         gltf.scene.scale.setScalar(furniture.modelScale || 1)
         gltf.scene.position.set(
@@ -579,8 +623,8 @@ function Main() {
 
   const [, drop] = useDrop({
     accept: '家具',
-    drop: (item, monitor) => {
-      const dom = document.getElementById('threejs-3d-container')!;
+    drop: (item: { modelUrl: string }, monitor) => {
+       const dom = document.getElementById('threejs-3d-container')!;
       const clientOffset = monitor.getClientOffset();
       const rect = dom.getBoundingClientRect();
       if (clientOffset && rect) {
@@ -605,7 +649,8 @@ function Main() {
             const point = intersections[0].point;
             addFurniture({
               id: 'furniture' + Math.random().toString().slice(2, 8),
-              modelUrl: './dining_table.glb',
+              modelUrl: item.modelUrl,
+              modelScale: item.modelUrl.includes('bed.glb') ? 800 : 1,
               position: {
                   x: point.x,
                   y: 0,

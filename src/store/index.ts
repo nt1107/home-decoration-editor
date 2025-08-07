@@ -64,9 +64,10 @@ export interface State {
     walls: Array<Wall>
     floors: Array<Floor>
     ceilings: Array<Ceiling>
-    furnitures: Array<Furniture>
-    
-  }
+    furnitures: Array<Furniture>    
+  },
+  showPreview: boolean
+
 }
 
 export interface Action {
@@ -77,11 +78,21 @@ export interface Action {
     info: Vector3
   ): void
   addFurniture(furniture: Furniture): void;
+  toggleShowPreview(): void;
 }
 
 const stateCreator: StateCreator<State & Action> = (set) => {
   return {
     data,
+    showPreview: false,
+    toggleShowPreview() {
+        set(state => {
+            return {
+                ...state,
+                showPreview: !state.showPreview
+            }
+        })
+    },
     setData(data: State['data']) {
       set((state) => {
         return {

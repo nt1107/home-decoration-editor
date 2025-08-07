@@ -14,10 +14,13 @@ interface MenuItemProps {
 }
 
 function MenuItem(props: MenuItemProps) {
-
+  
   const ref = useRef(null)
   const [, drag] = useDrag({
-    type: '家具'
+    type: '家具',
+    item: {
+      modelUrl: props.title === '床' ? './bed.glb' : './dining_table.glb'
+    }
   })
 
   useEffect(() => {
