@@ -23,7 +23,7 @@ export function getGLTFLoader() {
 }
 
 
-async function loadWindow() {
+export async function loadWindow() {
   const group = new THREE.Group()
   const gltf = await modelMap['./window.glb']
   gltf.scene = gltf.scene.clone()
@@ -40,7 +40,7 @@ async function loadWindow() {
   }
 }
 
-async function loadDoor() {
+export async function loadDoor() {
   const group = new THREE.Group()
   const gltf = await modelMap['./door.glb']
   gltf.scene = gltf.scene.clone()
@@ -57,14 +57,14 @@ async function loadDoor() {
 }
 
 const textureLoader = new THREE.TextureLoader()
-const floorTexture = textureLoader.load('./floor-texture.jpg')
+export const floorTexture = textureLoader.load('./floor-texture.jpg')
 floorTexture.colorSpace = THREE.SRGBColorSpace
 floorTexture.wrapS = THREE.RepeatWrapping
 floorTexture.wrapT = THREE.RepeatWrapping
 floorTexture.repeat.set(0.002, 0.002)
 
 function Main() {
-  const { data, updateFurniture, addFurniture } = useHouseStore()
+  const { data, updateFurniture, addFurniture, curSelectedFurniture, setCurSelectedFurniture, deleteFurniture } = useHouseStore()
   const dataRef = useRef<State['data']>(null)
   dataRef.current = data
 
@@ -100,6 +100,7 @@ function Main() {
   const changeSize3DRef = useRef<(isBig: boolean) => void>(null)
   const changeSize2DRef = useRef<(isBig: boolean) => void>(null)
   const controls3DRef = useRef<OrbitControls>(null);
+  const detachTransformControls3DRef = useRef<() => void>(null);
 
   const [curMode, setCurMode] = useState('2d')
 
@@ -126,7 +127,7 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-2d-container')
     if (dom) {
-      const { scene, changeMode, changeSize } = init2D(dom, updateFurniture)
+      const { scene, changeMode, changeSize } = init2D(dom, updateFurniture, setCurSelectedFurniture)
       scene2DRef.current = scene
       changeMode2DRef.current = changeMode
       changeSize2DRef.current = changeSize
@@ -141,16 +142,18 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-3d-container')
     if (dom) {
-      const { scene, camera, changeMode, changeSize, controls } = init3D(
+      const { scene, camera, changeMode, changeSize, controls, detachTransformControls } = init3D(
         dom,
         wallsVisibilityCalc,
-        updateFurniture
+        updateFurniture,
+        setCurSelectedFurniture
       )
       scene3DRef.current = scene
       camera3DRef.current = camera
       changeModeRef.current = changeMode
       changeSize3DRef.current = changeSize
       controls3DRef.current = controls
+      detachTransformControls3DRef.current = detachTransformControls;
     }
     return () => {
       if (dom) {
@@ -158,6 +161,28 @@ function Main() {
       }
     }
   }, [])
+  // 删除
+  useEffect(() => {
+    const scene = scene3DRef.current!;
+    function handleKeydown(e: KeyboardEvent) {
+      if(e.key === 'Backspace') {
+        if(curSelectedFurniture) {
+          const furniture = scene.getObjectByName(curSelectedFurniture.id);
+          if(furniture) {
+            furniture.parent?.remove(furniture);
+            deleteFurniture(furniture.name);
+            setCurSelectedFurniture('');
+            detachTransformControls3DRef.current?.();
+          }
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeydown);
+    return () => {
+        window.removeEventListener('keydown', handleKeydown);
+    }
+}, [curSelectedFurniture]);
+
 
   useEffect(() => {
     const changeSize3D = changeSize3DRef.current!

@@ -4,7 +4,8 @@ import type { Action } from '../../store'
 
 export function init2D(
   dom: HTMLElement,
-  updateFurniture: Action['updateFurniture']
+  updateFurniture: Action['updateFurniture'],
+  setCurSelectedFurniture: Action['setCurSelectedFurniture']
 ) {
   const scene = new THREE.Scene()
 
@@ -98,9 +99,11 @@ export function init2D(
       }
       if (obj.target) {
         transformControls.attach(obj.target)
+        setCurSelectedFurniture(obj.target.name);
       }
     } else {
       transformControls.detach()
+      setCurSelectedFurniture('');
     }
   })
 

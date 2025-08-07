@@ -1,7 +1,5 @@
 import * as THREE from 'three';
-import {
-    OrbitControls
-} from 'three/addons/controls/OrbitControls.js';
+import { FlyControls, RGBELoader } from 'three/examples/jsm/Addons.js';
 
 export function initPreviewScene(
     dom: HTMLElement
@@ -22,22 +20,33 @@ export function initPreviewScene(
     const height = window.innerHeight;
 
     const camera = new THREE.PerspectiveCamera(60, width / height, 1, 100000);
-    camera.position.set(6000, 4000, 6000);
-    camera.lookAt(0, 0, 0);
-
+    camera.position.set(1000, 2000, 500);
+ 
     const renderer = new THREE.WebGLRenderer({
         antialias: true
     });
     renderer.setSize(width, height);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-
+    const controls = new FlyControls(camera, renderer.domElement);
+    controls.movementSpeed = 1000;
+    controls.rollSpeed = Math.PI / 6;
+    
+    const clock = new THREE.Clock();
     function render() {
+        controls.update(clock.getDelta());
+    
         renderer.render(scene, camera);
         requestAnimationFrame(render);
     }
-
+    
     render();
+
+    const rgbeloader = new RGBELoader();
+    rgbeloader.load('./pic.hdr', function ( texture ) {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture;
+    });
+
 
     dom.append(renderer.domElement);
 

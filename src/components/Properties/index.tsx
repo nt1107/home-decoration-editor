@@ -3,11 +3,11 @@ import { useHouseStore } from '../../store'
 
 function Properties() {
   const [right, setRight] = useState(0)
-  const { data } = useHouseStore()
+  const { data, curSelectedFurniture } = useHouseStore()
 
   return (
     <div className="Properties" style={{ right: right }}>
-      <pre>{JSON.stringify(data.furnitures, null, 4)}</pre>
+      {JSON.stringify(curSelectedFurniture, null, 4)}
 
       <div
         className="drawer-bar"

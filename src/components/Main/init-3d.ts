@@ -6,7 +6,8 @@ import type { Action } from '../../store'
 export function init3D(
   dom: HTMLElement,
   wallsVisibilityCalc: () => void,
-  updateFurniture: Action['updateFurniture']
+  updateFurniture: Action['updateFurniture'],
+  setCurSelectedFurniture: Action['setCurSelectedFurniture']
 ) {
   const scene = new THREE.Scene()
 
@@ -104,8 +105,10 @@ export function init3D(
       }
       if (obj.target) {
         transformControls.attach(obj.target)
+        setCurSelectedFurniture(obj.target.name);
       } else {
         transformControls.detach()
+        setCurSelectedFurniture('');
       }
     }
 
@@ -155,11 +158,17 @@ export function init3D(
     }
   }
 
+  function detachTransformControls() {
+    transformControls.detach();
+}
+
+
   return {
     scene,
     camera,
     changeMode,
     changeSize,
-    controls
+    controls,
+    detachTransformControls
   }
 }
