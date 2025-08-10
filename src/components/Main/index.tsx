@@ -4,24 +4,28 @@ import { useHouseStore, type State } from '../../store'
 import { init3D } from './init-3d'
 import { init2D } from './init-2d'
 import { Button } from 'antd'
-import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js'
+import {
+  DRACOLoader,
+  GLTFLoader,
+  OrbitControls
+} from 'three/examples/jsm/Addons.js'
 import SpriteText from 'three-spritetext'
 import { useDrop } from 'react-dnd'
 import { modelMap } from '../../App'
 
-
-let loaderCache: GLTFLoader;
+let loaderCache: GLTFLoader
 export function getGLTFLoader() {
-    if(!loaderCache) {
-        const gltfLoader = new GLTFLoader();
-        const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.6/' );
-        gltfLoader.setDRACOLoader(dracoLoader);
-        loaderCache = gltfLoader;
-    }
-    return loaderCache;
+  if (!loaderCache) {
+    const gltfLoader = new GLTFLoader()
+    const dracoLoader = new DRACOLoader()
+    dracoLoader.setDecoderPath(
+      'https://www.gstatic.com/draco/versioned/decoders/1.5.6/'
+    )
+    gltfLoader.setDRACOLoader(dracoLoader)
+    loaderCache = gltfLoader
+  }
+  return loaderCache
 }
-
 
 export async function loadWindow() {
   const group = new THREE.Group()
@@ -64,7 +68,14 @@ floorTexture.wrapT = THREE.RepeatWrapping
 floorTexture.repeat.set(0.002, 0.002)
 
 function Main() {
-  const { data, updateFurniture, addFurniture, curSelectedFurniture, setCurSelectedFurniture, deleteFurniture } = useHouseStore()
+  const {
+    data,
+    updateFurniture,
+    addFurniture,
+    curSelectedFurniture,
+    setCurSelectedFurniture,
+    deleteFurniture
+  } = useHouseStore()
   const dataRef = useRef<State['data']>(null)
   dataRef.current = data
 
@@ -99,8 +110,9 @@ function Main() {
   const changeMode2DRef = useRef<(isTranslate: boolean) => void>(null)
   const changeSize3DRef = useRef<(isBig: boolean) => void>(null)
   const changeSize2DRef = useRef<(isBig: boolean) => void>(null)
-  const controls3DRef = useRef<OrbitControls>(null);
-  const detachTransformControls3DRef = useRef<() => void>(null);
+  const controls3DRef = useRef<OrbitControls>(null)
+  const detachTransformControls3DRef = useRef<() => void>(null)
+  const detachTransformControls2DRef = useRef<() => void>(null)
 
   const [curMode, setCurMode] = useState('2d')
 
@@ -127,10 +139,15 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-2d-container')
     if (dom) {
-      const { scene, changeMode, changeSize } = init2D(dom, updateFurniture, setCurSelectedFurniture)
+      const { scene, changeMode, changeSize, detachTransformControls } = init2D(
+        dom,
+        updateFurniture,
+        setCurSelectedFurniture
+      )
       scene2DRef.current = scene
       changeMode2DRef.current = changeMode
       changeSize2DRef.current = changeSize
+      detachTransformControls2DRef.current = detachTransformControls
     }
     return () => {
       if (dom) {
@@ -142,7 +159,14 @@ function Main() {
   useEffect(() => {
     const dom = document.getElementById('threejs-3d-container')
     if (dom) {
-      const { scene, camera, changeMode, changeSize, controls, detachTransformControls } = init3D(
+      const {
+        scene,
+        camera,
+        changeMode,
+        changeSize,
+        controls,
+        detachTransformControls
+      } = init3D(
         dom,
         wallsVisibilityCalc,
         updateFurniture,
@@ -153,7 +177,7 @@ function Main() {
       changeModeRef.current = changeMode
       changeSize3DRef.current = changeSize
       controls3DRef.current = controls
-      detachTransformControls3DRef.current = detachTransformControls;
+      detachTransformControls3DRef.current = detachTransformControls
     }
     return () => {
       if (dom) {
@@ -163,26 +187,32 @@ function Main() {
   }, [])
   // 删除
   useEffect(() => {
-    const scene = scene3DRef.current!;
+    const scene = scene3DRef.current!
+    const scene2D = scene2DRef.current!
     function handleKeydown(e: KeyboardEvent) {
-      if(e.key === 'Backspace') {
-        if(curSelectedFurniture) {
-          const furniture = scene.getObjectByName(curSelectedFurniture.id);
-          if(furniture) {
-            furniture.parent?.remove(furniture);
-            deleteFurniture(furniture.name);
-            setCurSelectedFurniture('');
-            detachTransformControls3DRef.current?.();
+      if (e.key === 'Backspace') {
+        if (curSelectedFurniture) {
+          const furniture = scene.getObjectByName(curSelectedFurniture.id)
+          if (furniture) {
+            furniture.parent?.remove(furniture)
+            deleteFurniture(furniture.name)
+            setCurSelectedFurniture('')
+            detachTransformControls3DRef.current?.()
+          }
+
+          const furniture2D = scene2D.getObjectByName(curSelectedFurniture.id)
+          if (furniture2D) {
+            furniture2D.parent?.remove(furniture2D)
+            detachTransformControls2DRef.current?.()
           }
         }
       }
     }
-    window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keydown', handleKeydown)
     return () => {
-        window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('keydown', handleKeydown)
     }
-}, [curSelectedFurniture]);
-
+  }, [curSelectedFurniture])
 
   useEffect(() => {
     const changeSize3D = changeSize3DRef.current!
@@ -218,30 +248,30 @@ function Main() {
           )
 
           obj.rotation.x = furniture.rotation.x
-          obj.rotation.y = furniture.rotation.y
+          obj.rotation.y = furniture.rotation.y + Math.PI
           obj.rotation.z = furniture.rotation.z
         } else {
-          const furnitures = houseObj.getObjectByName('furnitures')!;
-      
+          const furnitures = houseObj.getObjectByName('furnitures')!
+
           modelMap[furniture.modelUrl].then((gltf) => {
             gltf.scene = gltf.scene.clone()
-            furnitures.add(gltf.scene);
-    
-            gltf.scene.scale.setScalar(furniture.modelScale || 1);
-    
+            furnitures.add(gltf.scene)
+
+            gltf.scene.scale.setScalar(furniture.modelScale || 1)
+
             gltf.scene.position.set(
-                -furniture.position.x,
-                -furniture.position.y,
-                -furniture.position.z
-            );
-    
-            gltf.scene.rotation.x = furniture.rotation.x;
-            gltf.scene.rotation.y = furniture.rotation.y;
-            gltf.scene.rotation.z = furniture.rotation.z;
-    
-            gltf.scene.traverse(obj => {
-                (obj as any).target = gltf.scene;
-            });
+              -furniture.position.x,
+              -furniture.position.y,
+              -furniture.position.z
+            )
+
+            gltf.scene.rotation.x = furniture.rotation.x
+            gltf.scene.rotation.y = furniture.rotation.y + Math.PI
+            gltf.scene.rotation.z = furniture.rotation.z
+
+            gltf.scene.traverse((obj) => {
+              ;(obj as any).target = gltf.scene
+            })
             gltf.scene.name = furniture.id
           })
         }
@@ -416,7 +446,6 @@ function Main() {
     const furnitures = new THREE.Group()
     furnitures.name = 'furnitures'
     data.furnitures.forEach((furniture) => {
-       
       modelMap[furniture.modelUrl].then((gltf) => {
         gltf.scene = gltf.scene.clone()
         furnitures.add(gltf.scene)
@@ -428,7 +457,7 @@ function Main() {
         )
 
         gltf.scene.rotation.x = furniture.rotation.x
-        gltf.scene.rotation.y = furniture.rotation.y
+        gltf.scene.rotation.y = furniture.rotation.y + Math.PI
         gltf.scene.rotation.z = furniture.rotation.z
 
         gltf.scene.traverse((obj) => {
@@ -465,31 +494,29 @@ function Main() {
           obj.rotation.y = furniture.rotation.y
           obj.rotation.z = furniture.rotation.z
         } else {
-         
-          const furnitures = houseObj.getObjectByName('furnitures')!;
-      
+          const furnitures = houseObj.getObjectByName('furnitures')!
+
           modelMap[furniture.modelUrl].then((gltf) => {
             gltf.scene = gltf.scene.clone()
-              furnitures.add(gltf.scene);
-              gltf.scene.scale.setScalar(furniture.modelScale || 1);
-      
-              gltf.scene.position.set(
-                  furniture.position.x,
-                  furniture.position.y,
-                  furniture.position.z
-              );
-      
-              gltf.scene.rotation.x = furniture.rotation.x;
-              gltf.scene.rotation.y = furniture.rotation.y;
-              gltf.scene.rotation.z = furniture.rotation.z;
-      
-              gltf.scene.traverse(obj => {
-                  (obj as any).target = gltf.scene;
-              });
-              gltf.scene.name = furniture.id
-          });
-      }
-      
+            furnitures.add(gltf.scene)
+            gltf.scene.scale.setScalar(furniture.modelScale || 1)
+
+            gltf.scene.position.set(
+              furniture.position.x,
+              furniture.position.y,
+              furniture.position.z
+            )
+
+            gltf.scene.rotation.x = furniture.rotation.x
+            gltf.scene.rotation.y = furniture.rotation.y
+            gltf.scene.rotation.z = furniture.rotation.z
+
+            gltf.scene.traverse((obj) => {
+              ;(obj as any).target = gltf.scene
+            })
+            gltf.scene.name = furniture.id
+          })
+        }
       })
       return
     }
@@ -615,14 +642,13 @@ function Main() {
     const box3 = new THREE.Box3()
     box3.expandByObject(house)
     const center = box3.getCenter(new THREE.Vector3())
-    camera3DRef.current?.lookAt(center.x, 0, center.z);
-    controls3DRef.current?.target.set(center.x, 0, center.z);
+    camera3DRef.current?.lookAt(center.x, 0, center.z)
+    controls3DRef.current?.target.set(center.x, 0, center.z)
     house.name = 'house'
 
     const furnitures = new THREE.Group()
     furnitures.name = 'furnitures'
     data.furnitures.forEach((furniture) => {
-      
       modelMap[furniture.modelUrl].then((gltf) => {
         gltf.scene = gltf.scene.clone()
         furnitures.add(gltf.scene)
@@ -649,54 +675,53 @@ function Main() {
   const [, drop] = useDrop({
     accept: '家具',
     drop: (item: { modelUrl: string }, monitor) => {
-       const dom = document.getElementById('threejs-3d-container')!;
-      const clientOffset = monitor.getClientOffset();
-      const rect = dom.getBoundingClientRect();
+      const dom = document.getElementById('threejs-3d-container')!
+      const clientOffset = monitor.getClientOffset()
+      const rect = dom.getBoundingClientRect()
       if (clientOffset && rect) {
-        const offsetX = clientOffset.x - rect.x;
-        const offsetY = clientOffset.y - rect.y;
-        
-        const width = window.innerWidth;
-        const height = window.innerHeight - 60;
-        
-        const y = -((offsetY / height) * 2 - 1);
-        const x = (offsetX / width) * 2 - 1;
-        
-        const rayCaster = new THREE.Raycaster();
-        rayCaster.setFromCamera(new THREE.Vector2(x, y), camera3DRef.current!);
-        
-        const scene3D = scene3DRef.current!;
-        
-        const floorGroup = scene3D.getObjectByName('floors')!;
-        const intersections = rayCaster.intersectObjects(floorGroup.children);
-        
-        if(intersections.length) {
-            const point = intersections[0].point;
-            addFurniture({
-              id: 'furniture' + Math.random().toString().slice(2, 8),
-              modelUrl: item.modelUrl,
-              modelScale: item.modelUrl.includes('bed.glb') ? 800 : 1,
-              position: {
-                  x: point.x,
-                  y: 0,
-                  z: point.z
-              },
-              rotation: {
-                  x: 0,
-                  y: 0,
-                  z: 0
-              }
-          });
+        const offsetX = clientOffset.x - rect.x
+        const offsetY = clientOffset.y - rect.y
+
+        const width = window.innerWidth
+        const height = window.innerHeight - 60
+
+        const y = -((offsetY / height) * 2 - 1)
+        const x = (offsetX / width) * 2 - 1
+
+        const rayCaster = new THREE.Raycaster()
+        rayCaster.setFromCamera(new THREE.Vector2(x, y), camera3DRef.current!)
+
+        const scene3D = scene3DRef.current!
+
+        const floorGroup = scene3D.getObjectByName('floors')!
+        const intersections = rayCaster.intersectObjects(floorGroup.children)
+
+        if (intersections.length) {
+          const point = intersections[0].point
+          addFurniture({
+            id: 'furniture' + Math.random().toString().slice(2, 8),
+            modelUrl: item.modelUrl,
+            modelScale: item.modelUrl.includes('bed.glb') ? 800 : 1,
+            position: {
+              x: point.x,
+              y: 0,
+              z: point.z
+            },
+            rotation: {
+              x: 0,
+              y: 0,
+              z: 0
+            }
+          })
         }
-        
       }
     }
   })
 
   useEffect(() => {
-    const div = document.getElementById('threejs-3d-container');
-    drop(div);
-}, []);
+    const div = document.getElementById('threejs-3d-container')
+    drop(div)
+  }, [])
 
   return (
     <div className="Main">

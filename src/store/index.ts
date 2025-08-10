@@ -45,7 +45,7 @@ interface Ceiling {
 }
 interface Furniture {
   modelUrl: string
-  modelScale?: number;
+  modelScale?: number
   id: string
   position: {
     x: number
@@ -64,8 +64,8 @@ export interface State {
     walls: Array<Wall>
     floors: Array<Floor>
     ceilings: Array<Ceiling>
-    furnitures: Array<Furniture>    
-  },
+    furnitures: Array<Furniture>
+  }
   showPreview: boolean
   curSelectedFurniture: Furniture | null
 }
@@ -77,10 +77,10 @@ export interface Action {
     type: 'position' | 'rotation',
     info: Vector3
   ): void
-  addFurniture(furniture: Furniture): void;
-  toggleShowPreview(): void;
-  deleteFurniture(id: string): void;
-  setCurSelectedFurniture(furnitureId: string): void;
+  addFurniture(furniture: Furniture): void
+  toggleShowPreview(): void
+  deleteFurniture(id: string): void
+  setCurSelectedFurniture(furnitureId: string): void
 }
 
 const stateCreator: StateCreator<State & Action> = (set) => {
@@ -88,12 +88,12 @@ const stateCreator: StateCreator<State & Action> = (set) => {
     data,
     showPreview: false,
     toggleShowPreview() {
-        set(state => {
-            return {
-                ...state,
-                showPreview: !state.showPreview
-            }
-        })
+      set((state) => {
+        return {
+          ...state,
+          showPreview: !state.showPreview
+        }
+      })
     },
     setData(data: State['data']) {
       set((state) => {
@@ -128,41 +128,38 @@ const stateCreator: StateCreator<State & Action> = (set) => {
       })
     },
     addFurniture(furniture: Furniture) {
-      set(state => {
-          return {
-              ...state,
-              data: {
-                  ...state.data,
-                  furnitures: [
-                      ...state.data.furnitures,
-                      furniture
-                  ]
-              }
+      set((state) => {
+        return {
+          ...state,
+          data: {
+            ...state.data,
+            furnitures: [...state.data.furnitures, furniture]
           }
+        }
       })
     },
     deleteFurniture(id) {
-      set(state => {
-          return {
-              ...state,
-              data: {
-                  ...state.data,
-                  furnitures: state.data.furnitures.filter(item => {
-                      return item.id !== id
-                  })
-              }
+      set((state) => {
+        return {
+          ...state,
+          data: {
+            ...state.data,
+            furnitures: state.data.furnitures.filter((item) => {
+              return item.id !== id
+            })
           }
+        }
       })
     },
     curSelectedFurniture: null,
     setCurSelectedFurniture(furnitureId) {
-      set(state => {
-        const found = state.data.furnitures.filter((item)=> {
-            return item.id === furnitureId;
-        });
+      set((state) => {
+        const found = state.data.furnitures.filter((item) => {
+          return item.id === furnitureId
+        })
         return {
-            ...state,
-            curSelectedFurniture: found.length ? found[0] : null
+          ...state,
+          curSelectedFurniture: found.length ? found[0] : null
         }
       })
     }

@@ -149,9 +149,15 @@ export function init2D(
 
   render()
 
+  function detachTransformControls() {
+    transformControls.detach();
+  }
+
+
   return {
     scene,
     changeMode,
-    changeSize
+    changeSize,
+    detachTransformControls
   }
 }

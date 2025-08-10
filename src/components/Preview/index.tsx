@@ -45,6 +45,18 @@ function Preview() {
         })
     }, [data])
 
+    useEffect(() => {
+      const scene = scene3DRef.current!;
+  
+      const furnitureGroup = scene.getObjectByName('furnitures');
+  
+      furnitureGroup?.children.forEach(item => {
+        if(!data.furnitures.find(f => f.id === item.name)) {
+          item.parent?.remove(item);
+        }
+      })
+    }, [data.furnitures.length])
+  
 
     useEffect(() => {
         const house = new THREE.Group();
